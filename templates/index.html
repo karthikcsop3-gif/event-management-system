@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventBase — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--surface:#111118;--panel:#16161f;--border:#1f1f2e;
+  --accent:#7c6af7;--accent-dim:rgba(124,106,247,.15);
+  --green:#4ade80;--green-dim:rgba(74,222,128,.12);
+  --red:#f87171;--red-dim:rgba(248,113,113,.12);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,.12);
+  --text:#e2e2f0;--muted:#5a5a78;--sub:#8888a8;
+  --radius:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* ── Sidebar ── */
+#sidebar{
+  width:220px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;
+  flex-direction:column;position:fixed;height:100vh;z-index:100;
+  transition:transform .25s;
+}
+.logo{padding:22px 20px 18px;font-family:'Syne',sans-serif;font-size:20px;
+  font-weight:800;letter-spacing:-.3px;
+  background:linear-gradient(135deg,#e2e2f0 30%,var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-section{padding:8px 12px;font-size:10px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1.2px;margin-top:8px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 16px;
+  font-size:13px;color:var(--sub);cursor:pointer;border-radius:8px;
+  margin:1px 8px;transition:background .15s,color .15s;
+}
+.nav-item:hover,.nav-item.active{background:var(--accent-dim);color:var(--accent);}
+.nav-item svg{flex-shrink:0;opacity:.7;}
+.nav-item.active svg{opacity:1;}
+.sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
+.user-chip{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--panel);border-radius:8px;font-size:12px;
+}
+.avatar{
+  width:30px;height:30px;border-radius:50%;background:var(--accent-dim);
+  border:1px solid var(--accent);display:flex;align-items:center;
+  justify-content:center;font-family:'Syne',sans-serif;font-size:12px;
+  font-weight:700;color:var(--accent);
+}
+.role-badge{
+  font-size:9px;text-transform:uppercase;letter-spacing:.8px;
+  padding:2px 6px;border-radius:4px;margin-top:2px;
+}
+.role-badge.admin{background:var(--accent-dim);color:var(--accent);}
+.role-badge.user{background:var(--green-dim);color:var(--green);}
+
+/* ── Main ── */
+#main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+#topbar{
+  height:56px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;flex:1;}
+#searchBox{
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'DM Mono',monospace;font-size:13px;
+  padding:7px 12px;width:220px;outline:none;transition:border-color .2s;
+}
+#searchBox:focus{border-color:var(--accent);}
+.btn-icon{
+  background:none;border:1px solid var(--border);border-radius:8px;
+  color:var(--sub);padding:7px 10px;cursor:pointer;transition:all .15s;font-size:12px;
+}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent);}
+#content{padding:24px;flex:1;}
+
+/* ── Stats Bar ── */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;
+}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);}
+.stat-value.accent{color:var(--accent);}
+.stat-value.green{color:var(--green);}
+.stat-value.amber{color:var(--amber);}
+
+/* ── Filter Row ── */
+.filter-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+.filter-input{
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'DM Mono',monospace;font-size:12px;
+  padding:6px 10px;outline:none;width:140px;transition:border-color .2s;
+}
+.filter-input:focus{border-color:var(--accent);}
+.btn{
+  font-family:'Syne',sans-serif;font-weight:600;font-size:13px;
+  padding:8px 16px;border:none;border-radius:8px;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.btn:active{transform:translateY(0);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--sub);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+
+/* ── Table ── */
+.table-wrap{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:auto;
+}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px;}
+thead th{
+  background:var(--panel);padding:10px 14px;text-align:left;
+  font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--muted);border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(124,106,247,.04);}
+tbody td{padding:10px 14px;color:var(--sub);vertical-align:top;max-width:180px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+tbody td.name-cell{color:var(--text);font-weight:500;max-width:160px;}
+.tag{
+  display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;
+  background:var(--accent-dim);color:var(--accent);
+}
+
+/* ── Modal ── */
+.overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:200;backdrop-filter:blur(4px);align-items:center;justify-content:center;
+}
+.overlay.show{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  width:680px;max-width:94vw;max-height:90vh;overflow-y:auto;
+  box-shadow:0 40px 80px rgba(0,0,0,.6);padding:28px 32px;
+  position:relative;
+}
+.modal-title{
+  font-family:'Syne',sans-serif;font-size:18px;font-weight:700;
+  margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;
+}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.form-input,.form-textarea{
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'DM Mono',monospace;font-size:13px;
+  padding:9px 12px;outline:none;transition:border-color .2s;width:100%;
+}
+.form-input:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-textarea{resize:vertical;min-height:70px;}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+.form-error{
+  background:var(--red-dim);border:1px solid rgba(248,113,113,.3);
+  color:var(--red);border-radius:8px;padding:10px 14px;font-size:12px;
+  margin-bottom:12px;
+}
+.dup-warning{
+  background:var(--amber-dim);border:1px solid rgba(251,191,36,.3);
+  color:var(--amber);border-radius:8px;padding:12px 14px;font-size:12px;
+  margin-bottom:12px;
+}
+.dup-item{display:flex;align-items:center;justify-content:space-between;
+  background:rgba(251,191,36,.06);border-radius:6px;padding:6px 10px;margin-top:6px;}
+.similarity-bar{
+  height:4px;border-radius:2px;background:var(--border);margin-top:4px;overflow:hidden;
+}
+.similarity-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--amber),var(--red));border-radius:2px;}
+
+/* ── View Modal ── */
+.view-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.view-item{padding:12px;background:var(--panel);border-radius:8px;}
+.view-item.full{grid-column:1/-1;}
+.view-item-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;}
+.view-item-value{font-size:13px;color:var(--text);word-break:break-word;white-space:pre-wrap;}
+.meta-row{display:flex;gap:16px;font-size:11px;color:var(--muted);
+  padding:12px;background:var(--panel);border-radius:8px;margin-bottom:14px;}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:1000;
+  font-size:13px;padding:12px 18px;border-radius:8px;
+  font-family:'DM Mono',monospace;opacity:0;transition:opacity .3s;
+  pointer-events:none;max-width:320px;
+}
+#toast.show{opacity:1;}
+#toast.success{background:var(--green-dim);border:1px solid rgba(74,222,128,.3);color:var(--green);}
+#toast.error{background:var(--red-dim);border:1px solid rgba(248,113,113,.3);color:var(--red);}
+#toast.info{background:var(--accent-dim);border:1px solid rgba(124,106,247,.3);color:var(--accent);}
+
+/* ── Tabs (admin) ── */
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab{
+  padding:8px 16px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;
+  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;margin-bottom:-1px;
+}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab:hover{color:var(--text);}
+
+/* ── History ── */
+.history-item{
+  padding:12px;border-radius:8px;background:var(--panel);
+  border:1px solid var(--border);margin-bottom:8px;
+}
+.history-meta{font-size:11px;color:var(--muted);margin-bottom:6px;
+  display:flex;justify-content:space-between;}
+
+/* ── Log viewer ── */
+.log-line{
+  font-size:11px;color:var(--sub);padding:3px 0;border-bottom:1px solid var(--border);
+  font-family:'DM Mono',monospace;
+}
+.log-line:last-child{border-bottom:none;}
+
+/* ── Loader ── */
+.spinner{
+  display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;
+  vertical-align:middle;margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;}
+.empty-state svg{margin-bottom:12px;opacity:.3;}
+
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);}
+  #main{margin-left:0;}
+  .stats-bar{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="logo">EventBase</div>
+  <div class="nav-section">Navigation</div>
+  <div class="nav-item active" onclick="showView('events')" id="nav-events">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Events
+  </div>
+  {% if role == 'admin' %}
+  <div class="nav-item" onclick="showView('admin')" id="nav-admin">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    Admin Panel
+  </div>
+  {% endif %}
+  <div class="nav-item" onclick="showView('logs')" id="nav-logs">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Activity Log
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar" id="avatarLetter">?</div>
+      <div>
+        <div id="usernameLabel" style="font-size:13px;font-weight:500;">...</div>
+        <div class="role-badge {{ role }}" id="roleLabel">{{ role }}</div>
+      </div>
+    </div>
+    <button class="btn btn-outline" style="width:100%;margin-top:10px;" onclick="window.location='/logout'">Sign Out</button>
+  </div>
+</nav>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <span class="topbar-title" id="topbarTitle">Events</span>
+    <input type="text" id="searchBox" placeholder="🔍  Search events..." oninput="debouncedSearch()">
+    <button class="btn-icon" onclick="exportCSV()" title="Export CSV">⬇ Export</button>
+    <button class="btn btn-primary" onclick="openAddModal()" id="addBtn">+ Add Event</button>
+  </div>
+  <div id="content">
+
+    <!-- EVENTS VIEW -->
+    <div id="view-events">
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-label">Total Events</div><div class="stat-value accent" id="statTotal">—</div></div>
+        <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value green" id="statMonth">—</div></div>
+        <div class="stat-card"><div class="stat-label">Upcoming</div><div class="stat-value amber" id="statUpcoming">—</div></div>
+        <div class="stat-card"><div class="stat-label">Contributors</div><div class="stat-value" id="statUsers">—</div></div>
+      </div>
+      <div class="filter-row">
+        <input class="filter-input" id="fDate" placeholder="Date (YYYY-MM)" oninput="loadEvents()">
+        <input class="filter-input" id="fElig" placeholder="Eligibility..." oninput="loadEvents()">
+        <input class="filter-input" id="fTeam" placeholder="Team Size..." oninput="loadEvents()">
+        <button class="btn btn-outline btn-sm" onclick="clearFilters()">Clear Filters</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Date</th><th>Overview</th>
+              <th>Eligibility</th><th>Team Size</th><th>Rounds</th>
+              <th>Added By</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTable"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <div>No events found</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="view-admin" style="display:none">
+      <div class="tab-bar">
+        <div class="tab active" onclick="adminTab('users')" id="atab-users">Users</div>
+        <div class="tab" onclick="adminTab('backups')" id="atab-backups">Backups</div>
+      </div>
+      <div id="admin-users">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+          <button class="btn btn-primary btn-sm" onclick="openCreateUser()">+ New User</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="admin-backups" style="display:none">
+        <div id="backupsList"></div>
+      </div>
+    </div>
+
+    <!-- LOGS VIEW -->
+    <div id="view-logs" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span style="font-size:13px;color:var(--muted);">Last 200 activity entries</span>
+        <button class="btn btn-outline btn-sm" onclick="loadLogs()">Refresh</button>
+      </div>
+      <div class="table-wrap" style="padding:12px;" id="logsContainer"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="eventModal">
+<div class="modal">
+  <div class="modal-title">
+    <span id="modalTitle">Add Event</span>
+    <button class="modal-close" onclick="closeModal('eventModal')">✕</button>
+  </div>
+  <div class="form-error" id="formError" style="display:none"></div>
+  <div class="dup-warning" id="dupWarning" style="display:none"></div>
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="fName" oninput="liveCheckDup()"></div>
+    <div class="form-group"><label class="form-label">Date (YYYY-MM-DD) *</label><input class="form-input" id="fDate2" type="date"></div>
+    <div class="form-group full"><label class="form-label">Overview</label><textarea class="form-textarea" id="fOverview" oninput="liveCheckDup()"></textarea></div>
+    <div class="form-group full"><label class="form-label">Description</label><textarea class="form-textarea" id="fDesc" style="min-height:90px;"></textarea></div>
+    <div class="form-group"><label class="form-label">Eligibility</label><input class="form-input" id="fEligibility"></div>
+    <div class="form-group"><label class="form-label">Team Size</label><input class="form-input" id="fTeamSize" placeholder="e.g. 2-5"></div>
+    <div class="form-group"><label class="form-label">Event Rounds</label><input class="form-input" id="fRounds"></div>
+    <div class="form-group"><label class="form-label">Judging Criteria</label><input class="form-input" id="fJudging"></div>
+    <div class="form-group full"><label class="form-label">General Rules</label><textarea class="form-textarea" id="fRules"></textarea></div>
+    <div class="form-group full"><label class="form-label">Important Dates & Deadlines</label><textarea class="form-textarea" id="fDeadlines"></textarea></div>
+    <div class="form-group full"><label class="form-label">Optional Link</label><input class="form-input" id="fLink" placeholder="https://..."></div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal('eventModal')">Cancel</button>
+    <button class="btn btn-primary" onclick="submitEvent()" id="submitBtn">Save Event</button>
+  </div>
+</div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="overlay" id="viewModal">
+<div class="modal">
+  <div class="modal-title">
+    <span>Event Details</span>
+    <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+  </div>
+  <div class="meta-row">
+    <span>Added by: <b id="vAddedBy">—</b></span>
+    <span>Created: <b id="vCreated">—</b></span>
+    <span>Updated: <b id="vUpdated">—</b></span>
+  </div>
+  <div class="view-grid" id="viewGrid"></div>
+  <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+    <button class="btn btn-outline" onclick="viewHistory(currentViewId)">History</button>
+    <button class="btn btn-primary" onclick="closeModal('viewModal');openEditModal(currentViewId)">Edit</button>
+  </div>
+</div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="overlay" id="historyModal">
+<div class="modal">
+  <div class="modal-title">
+    <span>Edit History</span>
+    <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+  </div>
+  <div id="historyContent"></div>
+</div>
+</div>
+
+<!-- CREATE USER MODAL -->
+<div class="overlay" id="createUserModal">
+<div class="modal" style="width:400px;">
+  <div class="modal-title">
+    <span>Create User</span>
+    <button class="modal-close" onclick="closeModal('createUserModal')">✕</button>
+  </div>
+  <div class="form-group" style="margin-bottom:14px;"><label class="form-label">Username</label><input class="form-input" id="newUsername"></div>
+  <div class="form-group" style="margin-bottom:14px;"><label class="form-label">Password</label><input class="form-input" type="password" id="newPassword"></div>
+  <div class="form-group" style="margin-bottom:14px;">
+    <label class="form-label">Role</label>
+    <select class="form-input" id="newRole"><option value="user">User</option><option value="admin">Admin</option></select>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal('createUserModal')">Cancel</button>
+    <button class="btn btn-primary" onclick="createUser()">Create</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const ROLE = "{{ role }}";
+const USERNAME = "{{ user }}";
+let allEvents = [];
+let editingId = null;
+let currentViewId = null;
+let dupCheckTimer = null;
+let forceAdd = false;
+
+// Init
+document.getElementById('avatarLetter').textContent = USERNAME[0].toUpperCase();
+document.getElementById('usernameLabel').textContent = USERNAME;
+
+// ── Views ──
+function showView(v){
+  ['events','admin','logs'].forEach(id=>{
+    document.getElementById('view-'+id).style.display = id===v ? '' : 'none';
+    const nav = document.getElementById('nav-'+id);
+    if(nav) nav.classList.toggle('active', id===v);
+  });
+  document.getElementById('topbarTitle').textContent = {events:'Events',admin:'Admin Panel',logs:'Activity Log'}[v]||v;
+  document.getElementById('addBtn').style.display = v==='events' ? '' : 'none';
+  if(v==='admin') loadAdminUsers();
+  if(v==='logs') loadLogs();
+}
+
+// ── Events ──
+function loadEvents(){
+  const q = document.getElementById('searchBox').value.trim();
+  const date = document.getElementById('fDate')?.value||'';
+  const elig = document.getElementById('fElig')?.value||'';
+  const team = document.getElementById('fTeam')?.value||'';
+  let url = `/api/events?name=${encodeURIComponent(q)}&date=${encodeURIComponent(date)}&eligibility=${encodeURIComponent(elig)}&team_size=${encodeURIComponent(team)}`;
+  fetch(url).then(r=>r.json()).then(data=>{
+    allEvents = data;
+    renderTable(data);
+    updateStats(data);
+  });
+}
+
+function renderTable(data){
+  const tbody = document.getElementById('eventsTable');
+  const empty = document.getElementById('emptyState');
+  if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML = data.map((e,i)=>`
+    <tr>
+      <td>${e.id}</td>
+      <td class="name-cell" title="${esc(e.Name)}">${esc(e.Name)}</td>
+      <td>${esc(e.Date||'—')}</td>
+      <td title="${esc(e.Overview)}">${trunc(e.Overview,40)}</td>
+      <td>${trunc(e.Eligibility,20)}</td>
+      <td>${esc(e['Team Size']||'—')}</td>
+      <td>${esc(e['Event Rounds']||'—')}</td>
+      <td><span class="tag">${esc(e.added_by||'—')}</span></td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="viewEvent('${e.id}')">View</button>
+        <button class="btn btn-outline btn-sm" onclick="openEditModal('${e.id}')" style="margin-left:4px;">Edit</button>
+        ${ROLE==='admin'?`<button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')" style="margin-left:4px;">Del</button>`:''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateStats(data){
+  document.getElementById('statTotal').textContent = data.length;
+  const now = new Date(); const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('statMonth').textContent = data.filter(e=>e.Date&&e.Date.startsWith(thisMonth)).length;
+  document.getElementById('statUpcoming').textContent = data.filter(e=>e.Date&&e.Date>now.toISOString().slice(0,10)).length;
+  const users = new Set(data.map(e=>e.added_by).filter(Boolean));
+  document.getElementById('statUsers').textContent = users.size;
+}
+
+let searchTimer;
+function debouncedSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(loadEvents,280);}
+function clearFilters(){['fDate','fElig','fTeam'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('searchBox').value='';loadEvents();}
+
+// ── View Event ──
+function viewEvent(id){
+  currentViewId = id;
+  fetch(`/api/events/${id}`).then(r=>r.json()).then(e=>{
+    document.getElementById('vAddedBy').textContent = e.added_by||'—';
+    document.getElementById('vCreated').textContent = (e.created_at||'').slice(0,16).replace('T',' ');
+    document.getElementById('vUpdated').textContent = (e.updated_at||'').slice(0,16).replace('T',' ');
+    const fields = [
+      ['Name','Name','full'],['Date','Date',''],['Overview','Overview','full'],
+      ['Description','Description','full'],['Eligibility','Eligibility',''],
+      ['Team Size','Team Size',''],['Event Rounds','Event Rounds',''],
+      ['Judging Criteria','Judging Criteria','full'],['General Rules','General Rules','full'],
+      ['Important Dates & Deadlines','Important Date and Deadline','full'],
+      ['Link','Optional (Link)','full'],
+    ];
+    document.getElementById('viewGrid').innerHTML = fields.map(([label,key,cls])=>`
+      <div class="view-item ${cls}">
+        <div class="view-item-label">${label}</div>
+        <div class="view-item-value">${esc(e[key]||'—')}</div>
+      </div>
+    `).join('');
+    document.getElementById('viewModal').classList.add('show');
+  });
+}
+
+// ── Add/Edit ──
+function openAddModal(){
+  editingId = null; forceAdd = false;
+  clearForm();
+  document.getElementById('modalTitle').textContent = 'Add Event';
+  document.getElementById('formError').style.display='none';
+  document.getElementById('dupWarning').style.display='none';
+  document.getElementById('eventModal').classList.add('show');
+}
+
+function openEditModal(id){
+  editingId = id; forceAdd = false;
+  fetch(`/api/events/${id}`).then(r=>r.json()).then(e=>{
+    document.getElementById('fName').value = e.Name||'';
+    document.getElementById('fDate2').value = e.Date||'';
+    document.getElementById('fOverview').value = e.Overview||'';
+    document.getElementById('fDesc').value = e.Description||'';
+    document.getElementById('fEligibility').value = e.Eligibility||'';
+    document.getElementById('fTeamSize').value = e['Team Size']||'';
+    document.getElementById('fRounds').value = e['Event Rounds']||'';
+    document.getElementById('fJudging').value = e['Judging Criteria']||'';
+    document.getElementById('fRules').value = e['General Rules']||'';
+    document.getElementById('fDeadlines').value = e['Important Date and Deadline']||'';
+    document.getElementById('fLink').value = e['Optional (Link)']||'';
+    document.getElementById('modalTitle').textContent = 'Edit Event';
+    document.getElementById('formError').style.display='none';
+    document.getElementById('dupWarning').style.display='none';
+    document.getElementById('eventModal').classList.add('show');
+  });
+}
+
+function clearForm(){
+  ['fName','fDate2','fOverview','fDesc','fEligibility','fTeamSize','fRounds','fJudging','fRules','fDeadlines','fLink']
+    .forEach(id=>{document.getElementById(id).value='';});
+}
+
+function getFormData(){
+  return {
+    Name: document.getElementById('fName').value,
+    Date: document.getElementById('fDate2').value,
+    Overview: document.getElementById('fOverview').value,
+    Description: document.getElementById('fDesc').value,
+    Eligibility: document.getElementById('fEligibility').value,
+    'Team Size': document.getElementById('fTeamSize').value,
+    'Event Rounds': document.getElementById('fRounds').value,
+    'Judging Criteria': document.getElementById('fJudging').value,
+    'General Rules': document.getElementById('fRules').value,
+    'Important Date and Deadline': document.getElementById('fDeadlines').value,
+    'Optional (Link)': document.getElementById('fLink').value,
+    force_add: forceAdd
+  };
+}
+
+function submitEvent(){
+  const data = getFormData();
+  const url  = editingId ? `/api/events/${editingId}` : '/api/events';
+  const method = editingId ? 'PUT' : 'POST';
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML='<span class="spinner"></span>Saving...';btn.disabled=true;
+  fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+    .then(r=>r.json().then(d=>({status:r.status,d})))
+    .then(({status,d})=>{
+      if(status===200||status===201||d.success){
+        closeModal('eventModal');
+        showToast('Event saved successfully!','success');
+        loadEvents();
+      } else if(status===409&&d.needs_confirm){
+        showDupWarning(d.duplicates);
+      } else if(d.errors){
+        showFormError(d.errors.join('\n'));
+      } else {
+        showFormError(d.error||'Error saving event');
+      }
+    })
+    .catch(()=>showFormError('Network error'))
+    .finally(()=>{btn.innerHTML='Save Event';btn.disabled=false;});
+}
+
+function showDupWarning(dups){
+  const w = document.getElementById('dupWarning');
+  w.innerHTML = `<b>⚠ Possible Duplicates Detected</b><br>
+    Similar events found. Review before adding:
+    ${dups.map(d=>`
+      <div class="dup-item">
+        <span>${esc(d.name)}</span>
+        <span>${d.similarity}% similar</span>
+      </div>
+      <div class="similarity-bar"><div class="similarity-fill" style="width:${d.similarity}%"></div></div>
+    `).join('')}
+    <div style="margin-top:10px;display:flex;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('dupWarning').style.display='none'">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="forceAdd=true;submitEvent()">Add Anyway</button>
+    </div>
+  `;
+  w.style.display='block';
+}
+
+// Live duplicate check
+function liveCheckDup(){
+  clearTimeout(dupCheckTimer);
+  dupCheckTimer = setTimeout(()=>{
+    const name = document.getElementById('fName').value.trim();
+    const ov   = document.getElementById('fOverview').value.trim();
+    if(!name) return;
+    fetch('/api/check_duplicate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,overview:ov,exclude_id:editingId})})
+    .then(r=>r.json()).then(d=>{
+      const w = document.getElementById('dupWarning');
+      if(d.duplicates && d.duplicates.length){
+        w.innerHTML = `<b>⚠ Similar Events Found</b> — ${d.duplicates[0].name} (${d.duplicates[0].similarity}% match)`;
+        w.style.display='block';
+      } else { w.style.display='none'; }
+    });
+  }, 600);
+}
+
+function showFormError(msg){
+  const el = document.getElementById('formError');
+  el.textContent = msg; el.style.display='block';
+}
+
+function deleteEvent(id){
+  if(!confirm('Delete this event? This cannot be undone.')) return;
+  fetch(`/api/events/${id}`,{method:'DELETE'})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){showToast('Event deleted','info');loadEvents();}
+      else showToast(d.error||'Error','error');
+    });
+}
+
+// ── History ──
+function viewHistory(id){
+  closeModal('viewModal');
+  fetch(`/api/events/${id}/history`).then(r=>r.json()).then(versions=>{
+    if(!versions.length){document.getElementById('historyContent').innerHTML='<div style="color:var(--muted);text-align:center;padding:30px;">No edit history found.</div>';}
+    else{
+      document.getElementById('historyContent').innerHTML = versions.map((v,i)=>`
+        <div class="history-item">
+          <div class="history-meta">
+            <span>Version ${i} — saved by ${esc(v.saved_by)}</span>
+            <span>${v.saved_at.slice(0,16).replace('T',' ')}</span>
+          </div>
+          <div style="font-size:12px;color:var(--sub);">Name: ${esc(v.snapshot.Name||'—')}</div>
+          ${ROLE==='admin'?`<button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="restoreVersion('${id}',${i})">Restore This Version</button>`:''}
+        </div>
+      `).reverse().join('');
+    }
+    document.getElementById('historyModal').classList.add('show');
+  });
+}
+
+function restoreVersion(id,ver){
+  if(!confirm(`Restore version ${ver}?`)) return;
+  fetch(`/api/events/${id}/restore/${ver}`,{method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){closeModal('historyModal');showToast('Version restored','success');loadEvents();}
+      else showToast(d.error||'Error','error');
+    });
+}
+
+// ── Admin ──
+function loadAdminUsers(){
+  if(ROLE!=='admin') return;
+  fetch('/api/admin/users').then(r=>r.json()).then(users=>{
+    document.getElementById('usersTable').innerHTML = users.map(u=>`
+      <tr>
+        <td>${u.id}</td>
+        <td>${esc(u.username)}</td>
+        <td><span class="tag">${esc(u.role)}</span></td>
+        <td style="font-size:11px;">${(u.created_at||'').slice(0,10)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${u.username}')">Remove</button></td>
+      </tr>
+    `).join('');
+  });
+}
+
+function adminTab(tab){
+  ['users','backups'].forEach(t=>{
+    document.getElementById('admin-'+t).style.display = t===tab ? '' : 'none';
+    document.getElementById('atab-'+t).classList.toggle('active', t===tab);
+  });
+  if(tab==='backups') loadBackups();
+}
+
+function loadBackups(){
+  fetch('/api/admin/backups').then(r=>r.json()).then(files=>{
+    document.getElementById('backupsList').innerHTML = files.length ?
+      `<div class="table-wrap"><div style="padding:12px;">${files.map(f=>`<div class="log-line">${f}</div>`).join('')}</div></div>` :
+      '<div style="color:var(--muted);padding:20px;">No backups yet.</div>';
+  });
+}
+
+function openCreateUser(){document.getElementById('createUserModal').classList.add('show');}
+function createUser(){
+  const u = document.getElementById('newUsername').value.trim();
+  const p = document.getElementById('newPassword').value.trim();
+  const r = document.getElementById('newRole').value;
+  if(!u||!p){showToast('Fill all fields','error');return;}
+  fetch('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,role:r})})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){closeModal('createUserModal');showToast('User created','success');loadAdminUsers();}
+      else showToast(d.error||'Error','error');
+    });
+}
+function deleteUser(id,name){
+  if(!confirm(`Remove user "${name}"?`)) return;
+  fetch(`/api/admin/users/${id}`,{method:'DELETE'}).then(r=>r.json()).then(d=>{
+    if(d.success){showToast('User removed','info');loadAdminUsers();}
+    else showToast(d.error||'Error','error');
+  });
+}
+
+// ── Logs ──
+function loadLogs(){
+  if(ROLE!=='admin'){document.getElementById('logsContainer').innerHTML='<div style="color:var(--muted);">Admin access required.</div>';return;}
+  fetch('/api/admin/logs').then(r=>r.json()).then(lines=>{
+    document.getElementById('logsContainer').innerHTML = lines.length ?
+      [...lines].reverse().map(l=>`<div class="log-line">${esc(l.trim())}</div>`).join('') :
+      '<div style="color:var(--muted);">No logs yet.</div>';
+  });
+}
+
+// ── Export ──
+function exportCSV(){window.location='/api/export';}
+
+// ── Modals ──
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.overlay').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');});
+});
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg, type='info'){
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className=`show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.className='';},3000);
+}
+
+// ── Utils ──
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function trunc(s,n){s=s||'';return s.length>n?s.slice(0,n)+'…':s;}
+
+// ── Init ──
+loadEvents();
+setInterval(loadEvents, 30000); // auto-refresh every 30s
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Portal — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;--panel:#13131a;--border:#1e1e2e;
+    --accent:#7c6af7;--accent2:#f7a26a;
+    --text:#e8e8f0;--muted:#6b6b8a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'DM Mono',monospace;background:var(--bg);
+    color:var(--text);min-height:100vh;display:flex;
+    align-items:center;justify-content:center;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,106,247,.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(247,162,106,.08) 0%, transparent 60%);
+  }
+  .card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:48px 44px;width:400px;max-width:90vw;
+    box-shadow:0 32px 64px rgba(0,0,0,.5);
+    position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:'';position:absolute;top:-1px;left:20%;right:20%;
+    height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  }
+  .logo{
+    font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
+    letter-spacing:-.5px;margin-bottom:8px;
+    background:linear-gradient(135deg,#e8e8f0,var(--accent));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .subtitle{color:var(--muted);font-size:13px;margin-bottom:36px;}
+  label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  input{
+    width:100%;background:#0d0d14;border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;
+    font-size:14px;padding:12px 14px;margin-bottom:20px;
+    transition:border-color .2s;outline:none;
+  }
+  input:focus{border-color:var(--accent);}
+  .btn{
+    width:100%;background:var(--accent);color:#fff;
+    font-family:'Syne',sans-serif;font-weight:600;font-size:15px;
+    padding:13px;border:none;border-radius:8px;cursor:pointer;
+    transition:opacity .2s,transform .1s;letter-spacing:.3px;
+  }
+  .btn:hover{opacity:.9;transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .error{
+    background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);
+    color:#f87171;border-radius:8px;padding:10px 14px;
+    font-size:13px;margin-bottom:16px;
+  }
+  .hint{
+    margin-top:24px;padding-top:20px;border-top:1px solid var(--border);
+    font-size:12px;color:var(--muted);
+  }
+  .hint span{color:var(--accent2);}
+  .loader{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;
+    margin:auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Login Portal</div>
+  <div class="subtitle">Centralized event & topic management system</div>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <div class="error" id="jsError" style="display:none"></div>
+
+  <label>Username</label>
+  <input type="text" id="username" placeholder="Enter username" autocomplete="username">
+
+  <label>Password</label>
+  <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
+
+  <button class="btn" onclick="doLogin()">
+    <span id="btnText">Sign In</span>
+    <div class="loader" id="loader"></div>
+  </button>
+
+  <div class="hint">
+  Default user: <span>user01</span> / <span>user@123</span>
+</div>
+
+<div style="text-align:center; font-weight:bold; margin-top:5px;">
+  ✨ Made By Karthik ✨
+</div>
+</div>
+
+<script>
+function doLogin(){
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
+  const err = document.getElementById('jsError');
+  if(!u||!p){err.textContent='Please fill in all fields.';err.style.display='block';return;}
+  document.getElementById('btnText').style.display='none';
+  document.getElementById('loader').style.display='block';
+  fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})})
+    .then(r=>r.json().then(d=>({ok:r.ok,d})))
+    .then(({ok,d})=>{
+      if(ok){window.location='/';}
+      else{err.textContent=d.error||'Login failed';err.style.display='block';}
+    })
+    .catch(()=>{err.textContent='Connection error';err.style.display='block';})
+    .finally(()=>{
+      document.getElementById('btnText').style.display='block';
+      document.getElementById('loader').style.display='none';
+    });
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>
