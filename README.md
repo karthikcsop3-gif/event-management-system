@@ -122,3 +122,4 @@ For production:
 - **SQLite** (stdlib) — user authentication
 - **threading.Lock** — concurrent CSV access safety
 "# event-management-system" 
+"# event-management-system" 
