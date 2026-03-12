@@ -2,7 +2,7 @@ name: Keep Render Alive
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/2 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -12,5 +12,4 @@ jobs:
     steps:
       - name: Ping Render Server
         run: |
-          curl https://event-management-system-t26o.onrender.com
-
+          curl -s https://event-management-system-m4rt.onrender.com || true
