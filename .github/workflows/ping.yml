@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Ping Render Server
         run: |
-          curl -s https://event-management-system-m4rt.onrender.com || true
+          curl -s https://event-management-system-cp43.onrender.com || true
