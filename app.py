@@ -19,6 +19,14 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import difflib
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+# Indian Standard Time helper
+def ist_now():
+    return datetime.now(ZoneInfo("Asia/Kolkata"))
+
+
 
 # ─── App Setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -100,9 +108,14 @@ def init_history():
         with open(HISTORY_FILE, "w") as f:
             json.dump({}, f)
 
+# Indian Standard Time helper
+
+def ist_now():
+    return datetime.now(ZoneInfo("Asia/Kolkata"))
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 def log_activity(action, user, detail=""):
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ts = ist_now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{ts}] USER={user} ACTION={action} DETAIL={detail}\n"
     with open(LOG_FILE, "a") as f:
         f.write(line)
@@ -128,7 +141,7 @@ def write_csv(df):
 
 def backup_csv():
     if os.path.exists(CSV_FILE):
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ts = ist_now().strftime("%Y%m%d_%H%M%S")
         dest = os.path.join(BACKUP_DIR, f"events_backup_{ts}.csv")
         shutil.copy2(CSV_FILE, dest)
         # Keep only last 20 backups
